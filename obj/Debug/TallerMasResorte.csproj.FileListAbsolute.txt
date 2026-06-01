@@ -1,0 +1,4 @@
+C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\TallerMasResorte.csproj.AssemblyReference.cache
+C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\TallerMasResorte.SpringMassForm.resources
+C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\TallerMasResorte.Properties.Resources.resources
+C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\TallerMasResorte.csproj.GenerateResource.cache

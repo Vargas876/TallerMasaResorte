@@ -1,0 +1,366 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+
+\usetikzlibrary{decorations.pathmorphing, patterns}
+\geometry{left=2.5cm,right=2.5cm,top=3cm,bottom=3cm}
+
+\title{\textbf{Modelado Matemático e Informe de Simulación:\\Sistema Vertical Acoplado de Tres Masas}}
+\author{\textbf{Julián Velandia y Juan Vargas}\\\textit{Simulación de Computadores}\\Universidad Pedagógica y Tecnológica de Colombia (UPTC)}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introducción}
+El análisis dinámico de sistemas vibratorios mecánicos es fundamental en la ingeniería de control y modelado físico. Este informe detalla el modelado y simulación computacional de un sistema mecánico de traducción vertical compuesto por tres masas acopladas en serie, sustentadas por cuatro resortes lineales y cuatro amortiguadores viscosos, bajo la acción de una excitación externa $F(t)$ aplicada en la masa central $m_2$.
+
+El objetivo principal es obtener las funciones de transferencia del sistema en el dominio de la frecuencia mediante la transformada de Laplace y resolverlas de forma analítica e interactiva mediante una aplicación desarrollada en C\# conectada a GNU Octave.
+
+\section{Descripción y Diagrama del Sistema Mecánico}
+El sistema mecánico bajo estudio se compone de:
+\begin{itemize}
+    \item \textbf{Tres masas translacionales:} $m_1$, $m_2$, y $m_3$.
+    \item \textbf{Cuatro resortes lineales:} con constantes de rigidez $k_1, k_2, k_3, k_4$.
+    \item \textbf{Cuatro amortiguadores de fricción viscosa:} con coeficientes $c_1, c_2, c_3, c_4$.
+    \item \textbf{Tres desplazamientos independientes:} $y_1(t), y_2(t), y_3(t)$, orientados verticalmente con sentido positivo hacia abajo.
+    \item \textbf{Una fuerza externa:} $F(t)$ que excita directamente a la masa intermedia $m_2$.
+\end{itemize}
+
+El soporte del techo superior y la base del suelo inferior se consideran fijos (referencia inercial cero).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.2, every node/.style={draw=none, fill=none}]
+
+    % Soporte Superior (Techo)
+    \fill [pattern=north east lines] (-2.5,4.5) rectangle (2.5,4.8);
+    \draw (-2.5,4.5) -- (2.5,4.5);
+
+    % Masa 1 (m1)
+    \draw[fill=blue!10, thick] (-1.5,2.2) rectangle (1.5,3.0);
+    \node at (0,2.6) {\textbf{$m_1$}};
+    \draw[->, thick, red] (2.2,2.8) -- (2.2,2.0) node[midway, right] {$y_1(t)$};
+    \draw[dashed] (1.5,2.6) -- (2.4,2.6);
+
+    % Acoplamientos 1 (Techo a m1)
+    % Resorte k1
+    \draw[thick] (-0.8,4.5) -- (-0.8,4.1);
+    \draw[decoration={zigzag,pre length=2mm,post length=2mm,segment length=6,amplitude=4},decorate,thick] (-0.8,4.1) -- (-0.8,3.4);
+    \draw[thick] (-0.8,3.4) -- (-0.8,3.0);
+    \node at (-1.3,3.75) {$k_1$};
+
+    % Amortiguador c1
+    \draw[thick] (0.8,4.5) -- (0.8,3.95);
+    \draw[thick] (0.6,3.95) -- (1.0,3.95);
+    \draw[thick] (0.6,3.95) -- (0.6,3.55);
+    \draw[thick] (1.0,3.95) -- (1.0,3.55);
+    \draw[thick] (0.8,3.7) -- (0.8,3.0);
+    \fill[black] (0.7,3.7) rectangle (0.9,3.75);
+    \node at (1.3,3.75) {$c_1$};
+
+    % Masa 2 (m2)
+    \draw[fill=green!10, thick] (-1.5,-0.2) rectangle (1.5,0.6);
+    \node at (0,0.2) {\textbf{$m_2$}};
+    \draw[->, thick, red] (2.2,0.4) -- (2.2,-0.4) node[midway, right] {$y_2(t)$};
+    \draw[dashed] (1.5,0.2) -- (2.4,0.2);
+
+    % Fuerza externa F(t) en m2
+    \draw[->, ultra thick, red] (-2.2,0.6) -- (-2.2,-0.2) node[midway, left] {$F(t)$};
+    \draw[dashed] (-1.5,0.2) -- (-2.4,0.2);
+
+    % Acoplamientos 2 (m1 a m2)
+    % Resorte k2
+    \draw[thick] (-0.8,2.2) -- (-0.8,1.8);
+    \draw[decoration={zigzag,pre length=2mm,post length=2mm,segment length=6,amplitude=4},decorate,thick] (-0.8,1.8) -- (-0.8,1.0);
+    \draw[thick] (-0.8,1.0) -- (-0.8,0.6);
+    \node at (-1.3,1.4) {$k_2$};
+
+    % Amortiguador c2
+    \draw[thick] (0.8,2.2) -- (0.8,1.65);
+    \draw[thick] (0.6,1.65) -- (1.0,1.65);
+    \draw[thick] (0.6,1.65) -- (0.6,1.25);
+    \draw[thick] (1.0,1.65) -- (1.0,1.25);
+    \draw[thick] (0.8,1.4) -- (0.8,0.6);
+    \fill[black] (0.7,1.4) rectangle (0.9,1.45);
+    \node at (1.3,1.4) {$c_2$};
+
+    % Masa 3 (m3)
+    \draw[fill=yellow!10, thick] (-1.5,-2.6) rectangle (1.5,-1.8);
+    \node at (0,-2.2) {\textbf{$m_3$}};
+    \draw[->, thick, red] (2.2,-2.0) -- (2.2,-2.8) node[midway, right] {$y_3(t)$};
+    \draw[dashed] (1.5,-2.2) -- (2.4,-2.2);
+
+    % Acoplamientos 3 (m2 a m3)
+    % Resorte k3
+    \draw[thick] (-0.8,-0.2) -- (-0.8,-0.6);
+    \draw[decoration={zigzag,pre length=2mm,post length=2mm,segment length=6,amplitude=4},decorate,thick] (-0.8,-0.6) -- (-0.8,-1.4);
+    \draw[thick] (-0.8,-1.4) -- (-0.8,-1.8);
+    \node at (-1.3,-1.0) {$k_3$};
+
+    % Amortiguador c3
+    \draw[thick] (0.8,-0.2) -- (0.8,-0.75);
+    \draw[thick] (0.6,-0.75) -- (1.0,-0.75);
+    \draw[thick] (0.6,-0.75) -- (0.6,-1.15);
+    \draw[thick] (1.0,-0.75) -- (1.0,-1.15);
+    \draw[thick] (0.8,-0.95) -- (0.8,-1.8);
+    \fill[black] (0.7,-0.95) rectangle (0.9,-0.9);
+    \node at (1.3,-1.0) {$c_3$};
+
+    % Acoplamientos 4 (m3 a Suelo)
+    % Resorte k4
+    \draw[thick] (-0.8,-2.6) -- (-0.8,-3.0);
+    \draw[decoration={zigzag,pre length=2mm,post length=2mm,segment length=6,amplitude=4},decorate,thick] (-0.8,-3.0) -- (-0.8,-3.8);
+    \draw[thick] (-0.8,-3.8) -- (-0.8,-4.2);
+    \node at (-1.3,-3.4) {$k_4$};
+
+    % Amortiguador c4
+    \draw[thick] (0.8,-2.6) -- (0.8,-3.15);
+    \draw[thick] (0.6,-3.15) -- (1.0,-3.15);
+    \draw[thick] (0.6,-3.15) -- (0.6,-3.55);
+    \draw[thick] (1.0,-3.15) -- (1.0,-3.55);
+    \draw[thick] (0.8,-3.35) -- (0.8,-4.2);
+    \fill[black] (0.7,-3.35) rectangle (0.9,-3.3);
+    \node at (1.3,-3.4) {$c_4$};
+
+    % Soporte Inferior (Suelo)
+    \fill [pattern=north east lines] (-2.5,-4.5) rectangle (2.5,-4.2);
+    \draw (-2.5,-4.2) -- (2.5,-4.2);
+
+\end{tikzpicture}
+\caption{Diagrama dinámico del sistema masa-resorte-amortiguador vertical de 3 masas.}
+\label{fig:diagrama_sistema}
+\end{figure}
+
+\section{Modelado Físico en el Dominio del Tiempo}
+Mediante la formulación clásica de Newton para traslación unidimensional ($\sum F = m \cdot \ddot{y}$), planteamos las ecuaciones que rigen la dinámica del sistema:
+
+\subsection{Ecuación de Movimiento para la Masa 1 ($m_1$)}
+La masa $m_1$ está vinculada dinámicamente con el techo fijo superior (a través de $k_1, c_1$) y con la masa intermedia $m_2$ (a través de $k_2, c_2$).
+\begin{equation}
+m_1 \ddot{y}_1(t) = -k_1 y_1(t) - c_1 \dot{y}_1(t) + k_2 (y_2(t) - y_1(t)) + c_2 (\dot{y}_2(t) - \dot{y}_1(t))
+\end{equation}
+Agrupando términos correspondientes a cada coordenada y sus derivadas temporales:
+\begin{equation}
+m_1 \ddot{y}_1(t) + (c_1 + c_2) \dot{y}_1(t) + (k_1 + k_2) y_1(t) - c_2 \dot{y}_2(t) - k_2 y_2(t) = 0
+\label{eq:m1_tiempo}
+\end{equation}
+
+\subsection{Ecuación de Movimiento para la Masa 2 ($m_2$)}
+La masa intermedia $m_2$ experimenta la fuerza externa $F(t)$, y se acopla dinámicamente con la masa superior $m_1$ ($k_2, c_2$) y con la masa inferior $m_3$ ($k_3, c_3$).
+\begin{equation}
+m_2 \ddot{y}_2(t) = -k_2 (y_2(t) - y_1(t)) - c_2 (\dot{y}_2(t) - \dot{y}_1(t)) + k_3 (y_3(t) - y_2(t)) + c_3 (\dot{y}_3(t) - \dot{y}_2(t)) + F(t)
+\end{equation}
+Reordenando los términos del acoplamiento:
+\begin{equation}
+-c_2 \dot{y}_1(t) - k_2 y_1(t) + m_2 \ddot{y}_2(t) + (c_2 + c_3) \dot{y}_2(t) + (k_2 + k_3) y_2(t) - c_3 \dot{y}_3(t) - k_3 y_3(t) = F(t)
+\label{eq:m2_tiempo}
+\end{equation}
+
+\subsection{Ecuación de Movimiento para la Masa 3 ($m_3$)}
+La masa inferior $m_3$ se conecta dinámicamente a la masa intermedia $m_2$ ($k_3, c_3$) y al soporte fijo del suelo inferior ($k_4, c_4$).
+\begin{equation}
+m_3 \ddot{y}_3(t) = -k_3 (y_3(t) - y_2(t)) - c_3 (\dot{y}_3(t) - \dot{y}_2(t)) - k_4 y_3(t) - c_4 \dot{y}_3(t)
+\end{equation}
+Agrupando de forma estructurada:
+\begin{equation}
+-c_3 \dot{y}_2(t) - k_3 y_2(t) + m_3 \ddot{y}_3(t) + (c_3 + c_4) \dot{y}_3(t) + (k_3 + k_4) y_3(t) = 0
+\label{eq:m3_tiempo}
+\end{equation}
+
+\section{Modelado en el Dominio de Laplace}
+Asumiendo condiciones iniciales nulas para todas las variables dinámicas del sistema:
+\[ y_i(0) = 0, \quad \dot{y}_i(0) = 0 \quad \text{para } i \in \{1, 2, 3\} \]
+Aplicamos la transformada lineal de Laplace sobre las ecuaciones diferenciales lineales (\ref{eq:m1_tiempo}), (\ref{eq:m2_tiempo}) y (\ref{eq:m3_tiempo}), obteniendo:
+
+\begin{align}
+\left[ m_1 s^2 + (c_1 + c_2)s + (k_1 + k_2) \right] Y_1(s) - (c_2 s + k_2) Y_2(s) &= 0 \\
+-(c_2 s + k_2) Y_1(s) + \left[ m_2 s^2 + (c_2 + c_3)s + (k_2 + k_3) \right] Y_2(s) - (c_3 s + k_3) Y_3(s) &= F(s) \\
+-(c_3 s + k_3) Y_2(s) + \left[ m_3 s^2 + (c_3 + c_4)s + (k_3 + k_4) \right] Y_3(s) &= 0
+\end{align}
+
+\subsection{Matriz de Impedancia}
+Para facilitar la manipulación matemática, definimos polinomios de impedancia para cada grado de libertad:
+\begin{align}
+P_1(s) &= m_1 s^2 + (c_1 + c_2)s + (k_1 + k_2) \\
+P_2(s) &= m_2 s^2 + (c_2 + c_3)s + (k_2 + k_3) \\
+P_3(s) &= m_3 s^2 + (c_3 + c_4)s + (k_3 + k_4)
+\end{align}
+Así como los polinomios de acoplamiento mutuo:
+\begin{align}
+R_{12}(s) &= c_2 s + k_2 \\
+R_{23}(s) &= c_3 s + k_3
+\end{align}
+
+El sistema resultante se escribe en una elegante representación matricial:
+\begin{equation}
+\begin{bmatrix}
+P_1(s) & -R_{12}(s) & 0 \\
+-R_{12}(s) & P_2(s) & -R_{23}(s) \\
+0 & -R_{23}(s) & P_3(s)
+\end{bmatrix}
+\begin{bmatrix}
+Y_1(s) \\
+Y_2(s) \\
+Y_3(s)
+\end{bmatrix}
+=
+\begin{bmatrix}
+0 \\
+F(s) \\
+0
+\end{bmatrix}
+\label{eq:sistema_matricial}
+\end{equation}
+
+\section{Cálculo Analítico de las Funciones de Transferencia por Sustitución}
+Para responder a los requisitos metodológicos del taller, procedemos a deducir analíticamente las tres funciones de transferencia del sistema vertical utilizando el método de \textbf{Sustitución Algebraica} en el dominio de Laplace.
+
+Para evitar expresiones extremadamente extensas y complejas que dificulten el análisis, introducimos variables auxiliares representando los polinomios característicos de cada grado de libertad (impedancias del sistema):
+\begin{align}
+P_1(s) &= m_1 s^2 + (c_1 + c_2)s + (k_1 + k_2) \\
+P_2(s) &= m_2 s^2 + (c_2 + c_3)s + (k_2 + k_3) \\
+P_3(s) &= m_3 s^2 + (c_3 + c_4)s + (k_3 + k_4)
+\end{align}
+Así como los polinomios de acoplamiento elástico-viscoso entre masas consecutivas:
+\begin{align}
+R_{12}(s) &= c_2 s + k_2 \\
+R_{23}(s) &= c_3 s + k_3
+\end{align}
+
+Sustituyendo estos polinomios abreviados, reescribimos el conjunto de ecuaciones dinámicas de Laplace de la siguiente forma estructurada:
+\begin{align}
+P_1(s) Y_1(s) - R_{12}(s) Y_2(s) &= 0 \label{eq:eqA} \\
+-R_{12}(s) Y_1(s) + P_2(s) Y_2(s) - R_{23}(s) Y_3(s) &= F(s) \label{eq:eqB} \\
+-R_{23}(s) Y_2(s) + P_3(s) Y_3(s) &= 0 \label{eq:eqC}
+\end{align}
+
+A partir de este sistema compacto de tres ecuaciones y tres incógnitas, realizamos el proceso de sustitución algebraica paso a paso:
+
+\subsection{Paso 1: Expresar la Masa 3 ($Y_3$) en función de la Masa 2 ($Y_2$)}
+A partir de la ecuación de la masa inferior (\ref{eq:eqC}), aislamos el término de $Y_3(s)$:
+\[ P_3(s) Y_3(s) = R_{23}(s) Y_2(s) \]
+\[ Y_3(s) = \frac{R_{23}(s)}{P_3(s)} Y_2(s) \]
+Para mantener la elegancia de las expresiones intermedias, definimos la variable auxiliar adimensional $a_3(s)$:
+\begin{equation}
+a_3(s) = \frac{R_{23}(s)}{P_3(s)} \quad \implies \quad Y_3(s) = a_3(s) Y_2(s)
+\label{eq:subX3}
+\end{equation}
+
+\subsection{Paso 2: Expresar la Masa 1 ($Y_1$) en función de la Masa 2 ($Y_2$)}
+De forma análoga, a partir de la ecuación de la masa superior (\ref{eq:eqA}), aislamos el término de $Y_1(s)$:
+\[ P_1(s) Y_1(s) = R_{12}(s) Y_2(s) \]
+\[ Y_1(s) = \frac{R_{12}(s)}{P_1(s)} Y_2(s) \]
+Definimos la variable auxiliar adimensional $a_1(s)$:
+\begin{equation}
+a_1(s) = \frac{R_{12}(s)}{P_1(s)} \quad \implies \quad Y_1(s) = a_1(s) Y_2(s)
+\label{eq:subX1}
+\end{equation}
+
+\subsection{Paso 3: Sustitución en la ecuación central para obtener $G_2(s)$}
+Procedemos a sustituir las relaciones de $Y_1(s)$ en (\ref{eq:subX1}) y $Y_3(s)$ en (\ref{eq:subX3}) directamente dentro de la ecuación central de excitación (\ref{eq:eqB}):
+\[ -R_{12}(s) \left[ a_1(s) Y_2(s) \right] + P_2(s) Y_2(s) - R_{23}(s) \left[ a_3(s) Y_2(s) \right] = F(s) \]
+Agrupamos y factorizamos el término común de desplazamiento de la masa central $Y_2(s)$:
+\begin{equation}
+\left[ P_2(s) - R_{12}(s)a_1(s) - R_{23}(s)a_3(s) \right] Y_2(s) = F(s)
+\label{eq:eqCentralFactorizada}
+\end{equation}
+Reemplazamos de vuelta las variables auxiliares $a_1(s)$ y $a_3(s)$ por sus expresiones racionales:
+\[ \left[ P_2(s) - \frac{R_{12}(s)^2}{P_1(s)} - \frac{R_{23}(s)^2}{P_3(s)} \right] Y_2(s) = F(s) \]
+Para resolver la fracción compuesta, hallamos el mínimo común denominador dentro del corchete, que es $P_1(s)P_3(s)$:
+\[ \left[ \frac{P_1(s)P_2(s)P_3(s) - R_{12}(s)^2 P_3(s) - R_{23}(s)^2 P_1(s)}{P_1(s)P_3(s)} \right] Y_2(s) = F(s) \]
+
+Definimos el polinomio denominador característico general del sistema acoplado de sexto orden, $D(s)$, como:
+\begin{equation}
+D(s) = P_1(s)P_2(s)P_3(s) - R_{12}(s)^2 P_3(s) - R_{23}(s)^2 P_1(s)
+\label{eq:denominador_Ds}
+\end{equation}
+
+Sustituyendo (\ref{eq:denominador_Ds}) obtenemos la función de transferencia para la masa excitada $m_2$:
+\begin{equation}
+G_2(s) = \frac{Y_2(s)}{F(s)} = \frac{P_1(s)P_3(s)}{D(s)}
+\label{eq:ft_g2_sub}
+\end{equation}
+
+\subsection{Paso 4: Obtención de la Función de Transferencia de la Masa 1, $G_1(s)$}
+Sustituyen el resultado obtenido para $Y_2(s)$ en (\ref{eq:ft_g2_sub}) de regreso en la ecuación de acoplamiento de la masa superior (\ref{eq:subX1}):
+\[ Y_1(s) = \frac{R_{12}(s)}{P_1(s)} Y_2(s) \]
+\[ Y_1(s) = \frac{R_{12}(s)}{P_1(s)} \cdot \left[ \frac{P_1(s)P_3(s)}{D(s)} F(s) \right] \]
+Simplificando los términos, el polinomio $P_1(s)$ se cancela de manera exacta en el numerador y denominador:
+\[ Y_1(s) = \frac{R_{12}(s)P_3(s)}{D(s)} F(s) \]
+Por consiguiente, la función de transferencia de la masa superior $m_1$ es:
+\begin{equation}
+G_1(s) = \frac{Y_1(s)}{F(s)} = \frac{R_{12}(s)P_3(s)}{D(s)}
+\label{eq:ft_g1_sub}
+\end{equation}
+
+\subsection{Paso 5: Obtención de la Función de Transferencia de la Masa 3, $G_3(s)$}
+De manera análoga, sustituimos $Y_2(s)$ de (\ref{eq:ft_g2_sub}) en la relación de la masa inferior (\ref{eq:subX3}):
+\[ Y_3(s) = \frac{R_{23}(s)}{P_3(s)} Y_2(s) \]
+\[ Y_3(s) = \frac{R_{23}(s)}{P_3(s)} \cdot \left[ \frac{P_1(s)P_3(s)}{D(s)} F(s) \right] \]
+El término $P_3(s)$ se cancela de forma perfecta:
+\[ Y_3(s) = \frac{R_{23}(s)P_1(s)}{D(s)} F(s) \]
+Por consiguiente, la función de transferencia de la masa inferior $m_3$ es:
+\begin{equation}
+G_3(s) = \frac{Y_3(s)}{F(s)} = \frac{R_{23}(s)P_1(s)}{D(s)}
+\label{eq:ft_g3_sub}
+\end{equation}
+
+\section{Arquitectura del Simulador}
+El simulador computacional está diseñado con una arquitectura modular ejecutada de forma local en la máquina de pruebas.
+
+\subsection{Especificaciones del Entorno}
+\begin{enumerate}
+    \item \textbf{C\# .NET 4.8 Core Framework:} Maneja la interfaz gráfica de usuario (GUI), la validación de parámetros en tiempo de ejecución, la reproducción dinámica GDI+ y el graficado dinámico de curvas en tiempo real mediante MS Chart.
+    \item \textbf{GNU Octave Engine:} Ejecuta en segundo plano la simulación de control dinámico asíncronamente. El script evalúa mediante los comandos \texttt{step} e \texttt{impulse} del paquete \texttt{control} y devuelve los vectores de tiempo y desplazamiento a la aplicación en memoria.
+\end{enumerate}
+
+\section{Funcionamiento de la Aplicación e Interfaz Gráfica}
+A continuación, se describen y documentan las principales vistas y el comportamiento interactivo de la herramienta desarrollada. Para compilar correctamente el reporte, simplemente guarde las capturas de pantalla de la aplicación con los nombres indicados en la misma carpeta que este archivo.
+
+\subsection{Panel de Control e Iteraciones Combinatorias}
+La pantalla principal de la herramienta organiza en tres columnas todos los controles necesarios para configurar y correr las simulaciones dinámicas de forma responsiva.
+\begin{figure}[H]
+\centering
+% Reemplace la siguiente línea por su captura de pantalla
+\includegraphics[width=0.9\textwidth]{dashboard_results.png}
+\caption{Vista principal de la aplicación: Panel de configuración (izquierda), tabla de iteraciones con picos absolutos de desplazamiento y gráficos en paralelo de respuesta temporal al Paso y al Impulso (derecha).}
+\label{fig:dashboard}
+\end{figure}
+
+\subsection{Animación Física Interactiva (GDI+)}
+El simulador cuenta con una columna central dedicada a la renderización vectorial dinámica. Se dibuja con precisión matemática la contracción de los resortes helicoidales y el movimiento de los pistones en los amortiguadores cilíndricos, sincronizados en tiempo real con un cursor temporal en las gráficas de curvas.
+\begin{figure}[H]
+\centering
+% Reemplace la siguiente línea por su captura de pantalla
+\includegraphics[width=0.45\textwidth]{canvas_animation.png}
+\caption{Detalle del panel de animación GDI+ mostrando el sistema vertical con su techo y suelo fijos, las masas con sus etiquetas dinámicas de Kg y desplazamiento instantáneo en $y(t)$, y la flecha representativa de la fuerza de excitación externa $f(t)$.}
+\label{fig:animation}
+\end{figure}
+
+\subsection{Pestaña de Deducción Matemática Activa}
+La aplicación expone una sección teórica donde se muestran las matrices de Laplace generales y las funciones de transferencia numéricas simplificadas $G_1(s), G_2(s), G_3(s)$ calculadas en caliente en base a la iteración seleccionada en la tabla.
+\begin{figure}[H]
+\centering
+% Reemplace la siguiente línea por su captura de pantalla
+\includegraphics[width=0.85\textwidth]{math_tab.png}
+\caption{Pestaña de deducción matemática activa con los polinomios resueltos en tiempo real por el motor de GNU Octave.}
+\label{fig:matematica}
+\end{figure}
+
+\section{Conclusiones}
+Se derivó con rigurosidad física y matemática el modelado general para un sistema vertical acoplado de 3 masas dinámicas. La representación matricial de impedancias en Laplace permitió aislar el determinante del sistema característico y deducir de forma elegante las tres funciones de transferencia analíticas aplicadas a la excitación en la masa 2. La concordancia dinámica de los gráficos y animaciones interactivas validan el correcto acoplamiento matemático implementado.
+
+\end{document}
