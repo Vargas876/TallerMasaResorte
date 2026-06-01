@@ -561,22 +561,21 @@ namespace TallerMasResorte
             Pen penDamper = new Pen(Color.FromArgb(52, 152, 219), 2.2f);
             Pen penForce = new Pen(Color.FromArgb(231, 76, 60), 3.5f);
 
-            // Ceiling line (ancho óptimo y balanceado)
+           
             g.DrawLine(penFixed, X - 150, yCeiling, X + 150, yCeiling);
             for (int i = -7; i <= 7; i++)
             {
                 g.DrawLine(penDrawn, X + i * 20, yCeiling, X + i * 20 + 8, yCeiling - 8);
             }
 
-            // Floor line (ancho óptimo y balanceado)
             g.DrawLine(penFixed, X - 150, yFloor, X + 150, yFloor);
             for (int i = -7; i <= 7; i++)
             {
                 g.DrawLine(penDrawn, X + i * 20, yFloor, X + i * 20 - 8, yFloor + 8);
             }
 
-            float mWidth = 140f; // Ancho intermedio perfecto
-            float mHeight = 46f; // Altura intermedia perfecta
+            float mWidth = 140f; 
+            float mHeight = 46f; 
 
             DrawSpring(g, penSpring, X - 45, yCeiling, y1 - mHeight/2);
             DrawDamper(g, penDamper, X + 45, yCeiling, y1 - mHeight/2);
