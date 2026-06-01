@@ -18,3 +18,4 @@ C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyect
 C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\net48\TallerMa.DEAB54F2.Up2Date
 C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\net48\TallerMasResorte.exe
 C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\net48\TallerMasResorte.pdb
+C:\Users\Juan\Desktop\Simulacionn\Proyectos-Simulacion-Computadores-main\Proyectos-Simulacion-Computadores-main\TallerMasResorte\TallerMasResorte\obj\Debug\net48\TallerMasResorte.sourcelink.json
